@@ -200,10 +200,11 @@ def find_elbow(weights):
     tmp = map(np.dot, curve_vectors, bhat_big)
     tmp2 = map(np.multiply, tmp, bhat_big)
     # calc orth distance from b-vector to point, find largest dist
-    elbow = ((curve_vectors - tmp2)**2).sum(axis=1).argmax()
+    elbow = ((curve_vectors - tmp2)**2).sum(axis=1)
+    emax = elbow.argmax() +1 #need to add one since first point not included
     # find weights >= elbow weight
     columns = sorted_weights.columns
-    mask = sorted_weights[columns[0]] >= sorted_weights[columns[0]][elbow]
+    mask = sorted_weights[columns[0]] >= sorted_weights[columns[0]][emax]
     top_features = sorted_weights[mask].index
     ## return top features
     return top_features, sorted_weights, elbow

@@ -112,8 +112,8 @@ class Test_SKM_Cluster(TestCase):
         index = ['reg_%04d'%x for x in range(all.shape[0])]
         alldf = skm.pd.DataFrame(all, index = index, columns=('weights',))
         topfeat, sweights, elbow = skm.find_elbow(alldf)
-        assert_equal(elbow, 48)
-
+        assert_equal(elbow.argmax(), 48)
+        assert_equal(topfeat[-1], 'reg_0050') # first 50 are best features
 
     def test_parse_clusters(self):
         # define 3 groups
@@ -147,19 +147,23 @@ class Test_SKM_Cluster(TestCase):
         assert_raises(TypeError, skm.predict_clust, sample_data, cutoffs_df)
 
     def test_run_clustering(self):
-        two_groups = self.data.copy()
-        # put features in groups (10,20)
-        # each is a group of 5, weight first 10 features
-        two_groups = (two_groups - .5) / 10.
-        two_groups.values[:5,:10] = two_groups.values[:5,:10] + .8
-        two_groups.values[5:,:10] = two_groups.values[5:,:10] - .8
+        two_groups = self.data_df.copy()
+        # put features in groups (60,100)
+        # each is a group of 30, weight first 10 features
+        two_groups = (two_groups - .5) / 10. #push mean near 0
+        two_groups.values[:30,:10] = two_groups.values[:30,:10] + .8
+        two_groups.values[30:,:10] = two_groups.values[30:,:10] - .8
         infile = os.path.join(self.tmpdir, 'data.csv')
         two_groups.to_csv(infile)
         weights, clusters = skm.run_clustering(infile, 10, None, 'best')
+        os.remove(infile)
         mask = clusters == 'pos'
-        expected = np.array(5* [10] + 5 * [0])
-        assert_equal(mask.sum(axis=1).values, expected)
-        os.remove(infile) 
+        expected = np.array( 30 * [10])
+        ## NOTE bias toward positive
+        assert_equal(mask.sum(axis=1).values[:30], expected)
+        ## These should all be less than 10 (eg sparse matches)
+        assert_equal(all(mask.sum(axis=1).values[30:] < expected), True)
+         
 
 if __name__ == '__main__':
     unittest.main()

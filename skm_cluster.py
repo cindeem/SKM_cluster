@@ -204,8 +204,8 @@ def find_elbow(weights):
     emax = elbow.argmax() +1 #need to add one since first point not included
     # find weights >= elbow weight
     columns = sorted_weights.columns
-    mask = sorted_weights[columns[0]] >= sorted_weights[columns[0]][emax]
-    top_features = sorted_weights[mask].index
+    mask = sorted_weights.values >= sorted_weights.values[emax]
+    top_features = sorted_weights[:mask.sum()].index
     ## return top features
     return top_features, sorted_weights, elbow
 
